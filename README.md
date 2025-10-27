@@ -13,19 +13,22 @@ A production-ready job scheduling service built with FastAPI, Redis, and Postgre
 - **Scalability**: Multi-worker support with Gunicorn
 - **SOLID Principles**: Clean, maintainable, and extensible code
 
-## 🏗 Project Structure
+##  Project Structure
 
 ```
 Digantara_project/
-├── app/                    # FastAPI application layer
-├── services/              # Business logic layer
-├── repositories/          # Data access layer
-├── schedulers/            # Job scheduling layer
+├── src/                   # Source code
+│   ├── api/              # API endpoints and routes
+│   ├── core/             # Core business logic
+│   ├── models/           # Database models
+│   └── cache/            # Redis and caching
 ├── config/               # Configuration management
-├── utils/                # Utility functions
+├── infrastructure/       # Docker and deployment files
 ├── tests/                # Test files
-├── docs/                 # Documentation
-└── app.py                # Main application entry point
+│   ├── unit/            # Unit tests
+│   └── integration/     # Integration tests
+├── docs/                # Documentation
+└── main.py              # Application entry point
 ```
 
 ## Quick Start
@@ -39,7 +42,7 @@ Digantara_project/
 
 2. **Run the application:**
    ```bash
-   uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+   uvicorn main:app --host 0.0.0.0 --port 8000 --reload
    ```
 
 3. **Access the API:**
@@ -61,17 +64,17 @@ Digantara_project/
 ## -- API Endpoints
 
 ### Job Management
-- `GET /jobs` - List all jobs
-- `GET /job/{id}` - Get job by ID
-- `POST /job` - Create new job
-- `DELETE /job/{id}` - Delete job
+- `GET /api/v1/jobs` - List all jobs
+- `GET /api/v1/jobs/{job_id}` - Get job by ID
+- `POST /api/v1/jobs` - Create new job
+- `DELETE /api/v1/jobs/{job_id}` - Delete job
 
 ### Monitoring
-- `GET /health` - Health check
-- `GET /ready` - Readiness check
-- `GET /metrics` - Basic metrics
+- `GET /api/v1/redis/stats` - Redis server statistics
+- `GET /docs` - API documentation (Swagger UI)
+- `GET /redoc` - Alternative API documentation (ReDoc)
 
-## 🛠 Configuration
+##  Configuration
 
 Copy the environment template and configure:
 ```bash
@@ -86,7 +89,7 @@ Key environment variables:
 - `REDIS_PORT` - Redis port
 - `ENVIRONMENT` - Environment (development/production)
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run tests
@@ -97,12 +100,12 @@ curl http://localhost:8000/health
 curl http://localhost:8000/jobs
 ```
 
-## 📖 Documentation
+##  Documentation
 
 - [Project Structure](docs/PROJECT_STRUCTURE.md)
 - [Production Deployment](docs/README_PRODUCTION.md)
 
-## 🏛 Architecture
+## Architecture
 
 This project follows **Clean Architecture** and **SOLID Principles**:
 
@@ -112,7 +115,7 @@ This project follows **Clean Architecture** and **SOLID Principles**:
 - **Interface Segregation**: Focused interfaces
 - **Dependency Inversion**: Depend on abstractions
 
-## 🔧 Development
+##  Development
 
 ### Adding New Features
 
@@ -128,7 +131,7 @@ This project follows **Clean Architecture** and **SOLID Principles**:
 - **Formatting**: `black`
 - **Import Sorting**: `isort`
 
-## 🚀 Deployment
+##  Deployment
 
 ### Docker
 ```bash
@@ -141,23 +144,23 @@ pip install -r requirements.txt
 python -m uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
-## 📊 Monitoring
+##  Monitoring
 
 - **Health Check**: `/health`
 - **Metrics**: `/metrics`
 - **Logs**: Structured logging with configurable levels
 
-## 🤝 Contributing
+##  Contributing
 
 1. Follow SOLID principles
 2. Write tests for new features
 3. Update documentation
 4. Use proper commit messages
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License.
 
 ---
 
-**Built with ❤️ using FastAPI, Redis, and PostgreSQL**
+**Built with FastAPI, Redis, and PostgreSQL**

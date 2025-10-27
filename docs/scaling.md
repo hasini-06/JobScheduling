@@ -165,3 +165,51 @@ Instrumentator().instrument(app).expose(app)
    - Set up Prometheus/Grafana for metrics
    - Monitor application and infrastructure health
    - Implement proper logging and tracing
+
+## APScheduler Scaling
+
+### Job Store Configuration
+```python
+# Use PostgreSQL job store for persistence across multiple instances
+jobstores = {
+    'default': SQLAlchemyJobStore(url='postgresql://user:password@localhost/db')
+}
+```
+
+### Scheduler Configuration for High Availability
+```python
+scheduler = BackgroundScheduler(
+    jobstores=jobstores,
+    timezone='Asia/Kolkata',
+    job_defaults={
+        'coalesce': True,          # Combine missed executions
+        'max_instances': 1,         # Prevent concurrent execution
+        'misfire_grace_time': 60   # Allow 60s delay
+    },
+    executors={
+        'default': ThreadPoolExecutor(20),  # Thread pool for job execution
+        'processpool': ProcessPoolExecutor(5)  # Process pool for CPU-intensive jobs
+    }
+)
+```
+
+### Best Practices for APScheduler Scaling
+1. **Job Store Selection**
+   - Use PostgreSQL/MySQL job stores for multi-instance deployments
+   - Redis job store for high-performance, lower durability needs
+   - Memory job store only for single-instance deployments
+
+2. **Job Execution**
+   - Configure appropriate executor pools
+   - Use process pool for CPU-intensive jobs
+   - Set proper misfire handling
+
+3. **High Availability**
+   - Implement proper locking mechanisms
+   - Configure job coalescing
+   - Set appropriate misfire grace times
+
+4. **Performance Optimization**
+   - Monitor job execution times
+   - Configure appropriate thread/process pools
+   - Implement job prioritization if needed
