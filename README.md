@@ -1,8 +1,8 @@
-# 🚀 Job Scheduler API
+#  Job Scheduler API
 
 A production-ready job scheduling service built with FastAPI, Redis, and PostgreSQL, following SOLID principles and clean architecture.
 
-## ✨ Features
+## Features
 
 - **Job Scheduling**: Create, manage, and execute scheduled jobs
 - **Redis Caching**: High-performance caching for improved response times
@@ -28,7 +28,7 @@ Digantara_project/
 └── app.py                # Main application entry point
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Development Mode
 
@@ -58,7 +58,7 @@ Digantara_project/
    - API: http://localhost
    - Health Check: http://localhost/health
 
-## 📚 API Endpoints
+## -- API Endpoints
 
 ### Job Management
 - `GET /jobs` - List all jobs

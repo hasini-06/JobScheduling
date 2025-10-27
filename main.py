@@ -2,9 +2,9 @@ from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.orm import Session
-from models import Base, engine, SessionLocal, Job, get_db
-from scheduler import SimpleScheduler as JobScheduler
-from settings import settings
+from src.models.models import Base, engine, SessionLocal, Job, get_db
+from src.core.scheduler import SimpleScheduler as JobScheduler
+from src.core.settings import settings
 import time
 import logging
 
@@ -48,9 +48,11 @@ app.add_middleware(
 # Initialize components
 job_scheduler = JobScheduler()
 
+
+
 # Add API routes
-from api import router as api_router
-app.include_router(api_router)
+from src.api.api import router as api_router
+app.include_router(api_router, prefix="/api/v1")
 
 # Request timing middleware
 @app.middleware("http")
