@@ -1,5 +1,15 @@
-fastapi
-uvicorn
-pydantic
-sqlalchemy
-apscheduler
+# Web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings
+
+# Database
+sqlalchemy==2.0.23
+
+# Scheduling
+apscheduler==3.10.4
+
+# Redis and Queue
+redis==5.0.1
+rq==1.15.1

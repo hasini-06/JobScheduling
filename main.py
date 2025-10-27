@@ -1,0 +1,79 @@
+from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from sqlalchemy.orm import Session
+from models import Base, engine, SessionLocal, Job, get_db
+from scheduler import SimpleScheduler as JobScheduler
+from settings import settings
+import time
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper()),
+    # concise and readable format
+    format='%(asctime)s %(levelname)s: %(message)s',
+)
+logger = logging.getLogger(__name__)
+# Reduce APScheduler verbosity (suppress INFO job-executed messages)
+logging.getLogger('apscheduler').setLevel(logging.WARNING)
+logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
+
+# Create tables
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title="Job Scheduler API",
+    description="A production-ready job scheduling service",
+    version="1.0.0",
+    docs_url="/docs" if settings.debug else None,
+    redoc_url="/redoc" if settings.debug else None
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Add trusted host middleware
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=settings.allowed_hosts
+)
+
+# Initialize components
+job_scheduler = JobScheduler()
+
+# Add API routes
+from api import router as api_router
+app.include_router(api_router)
+
+# Request timing middleware
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+
+# Load jobs on startup
+@app.on_event("startup")
+async def load_jobs_on_startup():
+    try:
+        db = SessionLocal()
+        jobs = db.query(Job).all()
+        for job in jobs:
+            job_scheduler.schedule_job(job.id, job.name, job.interval)
+        db.close()
+    except Exception as e:
+        print(f"Startup error: {e}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Shutting down application...")
+    job_scheduler.shutdown()

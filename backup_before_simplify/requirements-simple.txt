@@ -1,0 +1,16 @@
+# Web framework
+fastapi
+uvicorn[standard]
+pydantic
+
+# Database
+sqlalchemy
+
+# Scheduling
+apscheduler
+
+# Redis
+redis
+
+# Environment
+python-dotenv
