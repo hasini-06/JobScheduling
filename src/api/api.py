@@ -6,6 +6,16 @@ from typing import List, Optional, Dict
 from pydantic import BaseModel
 from src.cache.redis_manager import redis_manager
 from enum import Enum
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Global scheduler instance (set from main.py)
+_scheduler = None
+
+def set_scheduler(scheduler):
+    global _scheduler
+    _scheduler = scheduler
 
 class JobStatus(str, Enum):
     ACTIVE = "active"
@@ -58,6 +68,12 @@ def create_job(job: JobCreate, db: Session = Depends(get_db)):
     db.add(db_job)
     db.commit()
     db.refresh(db_job)
+    
+    # Schedule the job with the scheduler
+    if _scheduler:
+        _scheduler.schedule_job(db_job.id, db_job.name, db_job.interval)
+        logger.info(f"Created and scheduled reminder: {db_job.name} ({db_job.interval})")
+    
     return db_job
 
 @router.get("/jobs/{job_id}", response_model=JobResponse)
@@ -73,8 +89,16 @@ def delete_job(job_id: int, db: Session = Depends(get_db)):
     job = db.query(Job).filter(Job.id == job_id).first()
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
+    
+    job_name = job.name
     db.delete(job)
     db.commit()
+    
+    # Remove from scheduler
+    if _scheduler:
+        _scheduler.remove_job(job_id)
+    
+    logger.info(f"Deleted reminder: {job_name}")
     return {"message": "Job deleted"}
 
 

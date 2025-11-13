@@ -23,7 +23,7 @@ logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Job Scheduler API",
+    title="Job Scheduler API", 
     description="A production-ready job scheduling service",
     version="1.0.0",
     docs_url="/docs" if settings.debug else None,
@@ -48,10 +48,13 @@ app.add_middleware(
 # Initialize components
 job_scheduler = JobScheduler()
 
-
+# Make scheduler available to other modules
+def get_scheduler():
+    return job_scheduler
 
 # Add API routes
-from src.api.api import router as api_router
+from src.api.api import router as api_router, set_scheduler
+set_scheduler(job_scheduler)
 app.include_router(api_router, prefix="/api/v1")
 
 # Request timing middleware
@@ -71,9 +74,10 @@ async def load_jobs_on_startup():
         jobs = db.query(Job).all()
         for job in jobs:
             job_scheduler.schedule_job(job.id, job.name, job.interval)
+        logger.info(f"Loaded and scheduled {len(jobs)} jobs from database")
         db.close()
     except Exception as e:
-        print(f"Startup error: {e}")
+        logger.error(f"Startup error loading jobs: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_event():

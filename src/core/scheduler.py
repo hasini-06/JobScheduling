@@ -24,7 +24,7 @@ class SimpleScheduler:
             }
         )
         self.scheduler.start()
-        print("Scheduler started")
+        logger.info("Scheduler started successfully")
     
     def _parse_interval(self, interval: str) -> timedelta:
         """Convert interval string to timedelta"""
@@ -58,7 +58,7 @@ class SimpleScheduler:
             
             # For very frequent jobs (less than 1 minute), increase the interval
             if seconds < 60:
-                print(f"Warning: Interval too short for {name}, setting to 1 minute minimum")
+                logger.warning(f"Interval too short for {name}, setting to 1 minute minimum")
                 seconds = 60
             
             job_exists = False
@@ -77,12 +77,13 @@ class SimpleScheduler:
                 misfire_grace_time=60  # Allow up to 60 seconds delay
             )
             
+            # Log at debug level - jobs are loaded from DB on startup, not newly created
             if not job_exists:
-                logger.info(f"Added new job: {name} ({interval})")
+                logger.debug(f"Scheduled job: {name} ({interval})")
             else:
-                logger.debug(f"Updated existing job: {name} ({interval})")
+                logger.debug(f"Rescheduled job: {name} ({interval})")
         except Exception as e:
-            print(f"Error adding job: {e}")
+            logger.error(f"Error scheduling job {name}: {e}")
     
     def _run_job(self, job_id: int):
         """Execute a scheduled job"""
@@ -94,18 +95,18 @@ class SimpleScheduler:
                     job.last_run = now
                     job.next_run = now + self._parse_interval(job.interval)
                     db.commit()
-                    print(f"Reminder: {job.name} at {now.strftime('%H:%M:%S')}")
+                    logger.info(f"Reminder: {job.name} at {now.strftime('%H:%M:%S')}")
                 
         except Exception as e:
-            print(f"Error: {str(e)}")
+            logger.error(f"Job execution error: {str(e)}")
     
     def remove_job(self, job_id: int):
         """Stop a scheduled job"""
         try:
             self.scheduler.remove_job(str(job_id))
-            print(f"✅ Removed job {job_id}")
+            logger.info(f"Removed job {job_id}")
         except Exception as e:
-            print(f"⚠️ Could not remove job: {e}")
+            logger.warning(f"Could not remove job {job_id}: {e}")
     
     def shutdown(self):
         """Shut down the scheduler gracefully"""
