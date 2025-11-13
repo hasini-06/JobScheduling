@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 from src.models.models import Job, get_db
 from datetime import datetime
 from typing import List, Optional, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from src.cache.redis_manager import redis_manager
 from enum import Enum
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,23 @@ _scheduler = None
 def set_scheduler(scheduler):
     global _scheduler
     _scheduler = scheduler
+
+def validate_interval(interval: str) -> bool:
+    """Validate interval format"""
+    interval = interval.lower().strip()
+    
+    # Valid patterns: minutes (1m, 5 minutes), hours (1h, 2 hours), daily, weekly
+    minute_pattern = r"^(\d+)\s*(?:m|min|mins|minute|minutes)$"
+    hour_pattern = r"^(\d+)\s*(?:h|hr|hrs|hour|hours)$"
+    
+    if re.match(minute_pattern, interval):
+        return True
+    if re.match(hour_pattern, interval):
+        return True
+    if interval in ["daily", "weekly"]:
+        return True
+    
+    return False
 
 class JobStatus(str, Enum):
     ACTIVE = "active"
@@ -28,6 +46,14 @@ class JobCreate(BaseModel):
     description: Optional[str] = None
     interval: str
     status: JobStatus = JobStatus.PENDING  # Default to pending
+    
+    @validator('interval')
+    def validate_interval_format(cls, v):
+        if not validate_interval(v):
+            raise ValueError(
+                'Invalid interval format. Use: "5m", "1h", "2 hours", "30 minutes", "daily", or "weekly"'
+            )
+        return v
 
 class JobUpdate(BaseModel):
     name: Optional[str] = None
